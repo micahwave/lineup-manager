@@ -1,49 +1,52 @@
 /* line 5, ../sass/screen.scss */
 #lineup h2 {
-  text-align: right;
+  text-align: left;
+  margin-top: 0;
 }
-/* line 9, ../sass/screen.scss */
+/* line 10, ../sass/screen.scss */
 #lineup .inside {
   overflow: hidden;
+  padding: 1em 2em;
 }
-/* line 13, ../sass/screen.scss */
+/* line 15, ../sass/screen.scss */
 #lineup .search-results {
   padding-top: 1em;
   clear: both;
 }
-/* line 18, ../sass/screen.scss */
+/* line 20, ../sass/screen.scss */
 #lineup .search-results .item {
   border-bottom: 1px solid #ccc;
   padding: 0.5em 1em;
 }
-/* line 22, ../sass/screen.scss */
+/* line 24, ../sass/screen.scss */
 #lineup .search-results .item .add {
   float: right;
 }
+/* line 28, ../sass/screen.scss */
+#lineup .search-results .item:last-child {
+  border: 0;
+}
 
-/* line 29, ../sass/screen.scss */
+/* line 35, ../sass/screen.scss */
 .lineup {
   width: 60%;
   float: left;
 }
-/* line 34, ../sass/screen.scss */
+/* line 40, ../sass/screen.scss */
 .lineup .notice {
   text-align: center;
   font-size: 1.5em;
   color: #999;
 }
-/* line 40, ../sass/screen.scss */
-.lineup h2 {
-  text-align: right;
-}
-/* line 44, ../sass/screen.scss */
+/* line 46, ../sass/screen.scss */
 .lineup .selected-posts {
   background: #eee;
   /*padding: 2em  1em 2em 3em;*/
+  margin: 0;
   padding: 2em;
   border: 1px solid #ccc;
 }
-/* line 51, ../sass/screen.scss */
+/* line 54, ../sass/screen.scss */
 .lineup li {
   border: 1px solid #ccc;
   padding: 0.5em 1em;
@@ -65,7 +68,7 @@
   margin-left: 1em;
   text-align: left;
 }
-/* line 65, ../sass/screen.scss */
+/* line 68, ../sass/screen.scss */
 .lineup li:before {
   content: counter(list-counter) " ";
   float: left;
@@ -75,13 +78,13 @@
   /*width: 2em;*/
   line-height: 25px;
 }
-/* line 76, ../sass/screen.scss */
+/* line 79, ../sass/screen.scss */
 .lineup li.placeholder {
   background: none;
   border: 1px dashed #666;
   min-height: 25px;
 }
-/* line 82, ../sass/screen.scss */
+/* line 85, ../sass/screen.scss */
 .lineup li .title {
   font-size: 1.25em;
   font-weight: bold;
@@ -89,50 +92,80 @@
   text-shadow: 0 1px 0 #fff;
   color: #333;
 }
-/* line 90, ../sass/screen.scss */
+/* line 93, ../sass/screen.scss */
 .lineup li a {
   /*margin-right: 1em;*/
   font-size: 0.8em;
   text-decoration: none;
 }
-/* line 96, ../sass/screen.scss */
+/* line 99, ../sass/screen.scss */
 .lineup li nav {
   visibility: hidden;
   display: none;
 }
-/* line 102, ../sass/screen.scss */
+/* line 105, ../sass/screen.scss */
 .lineup li:hover nav {
   visibility: visible;
 }
 
-/* line 109, ../sass/screen.scss */
-.lineup-search {
-  width: 34%;
-  margin: 0 2% 0 4%;
+/* line 112, ../sass/screen.scss */
+#lineup-options {
+  width: 37%;
+  margin-left: 3%;
   float: left;
 }
-/* line 114, ../sass/screen.scss */
-.lineup-search label {
+/* line 118, ../sass/screen.scss */
+#lineup-options label {
   font-weight: bold;
   display: block;
   margin-bottom: 0.75em;
 }
-/* line 120, ../sass/screen.scss */
-.lineup-search fieldset {
+/* line 124, ../sass/screen.scss */
+#lineup-options fieldset {
   margin-bottom: 2em;
 }
-/* line 124, ../sass/screen.scss */
-.lineup-search select, .lineup-search input {
+/* line 129, ../sass/screen.scss */
+#lineup-options .field-recent-posts select, #lineup-options .field-recent-posts input {
   width: 100%;
 }
+/* line 134, ../sass/screen.scss */
+#lineup-options .field-lineup-location, #lineup-options .field-lineup-layout {
+  width: 48%;
+  float: left;
+}
+/* line 138, ../sass/screen.scss */
+#lineup-options .field-lineup-location select, #lineup-options .field-lineup-layout select {
+  width: 100%;
+}
+/* line 143, ../sass/screen.scss */
+#lineup-options .field-lineup-location {
+  margin-right: 4%;
+}
+/* line 149, ../sass/screen.scss */
+#lineup-options .field-search-posts .status {
+  font-weight: bold;
+  text-align: center;
+  margin-top: 1em;
+  display: none;
+}
+/* line 156, ../sass/screen.scss */
+#lineup-options .field-search-posts .status img {
+  margin-right: 0.25em;
+  display: inline-block;
+  vertical-align: bottom;
+}
+/* line 163, ../sass/screen.scss */
+#lineup-options .field-search-posts.loading .status {
+  display: block;
+}
 
-/* line 129, ../sass/screen.scss */
+/* line 169, ../sass/screen.scss */
 #lineup-search-query {
   width: 70%;
   float: left;
 }
 
-/* line 134, ../sass/screen.scss */
+/* line 174, ../sass/screen.scss */
 #lineup-search-submit {
   width: 25%;
   float: left;

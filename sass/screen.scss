@@ -3,11 +3,13 @@
 #lineup {
 
 	h2 {
-		text-align: right;
+		text-align: left;
+		margin-top: 0;
 	}
 
 	.inside {
 		overflow: hidden;
+		padding: 1em 2em;
 	}
 
 	.search-results {
@@ -21,6 +23,10 @@
 
 			.add {
 				float: right;
+			}
+
+			&:last-child {
+				border: 0;
 			}
 		}
 	}
@@ -37,13 +43,10 @@
 		color: #999;
 	}
 
-	h2 {
-		text-align: right;
-	}
-
 	.selected-posts {
 		background: #eee;
 		/*padding: 2em  1em 2em 3em;*/
+		margin: 0;
 		padding: 2em;
 		border: 1px solid #ccc;
 	}
@@ -106,9 +109,10 @@
 	}
 }
 
-.lineup-search {
-	width: 34%;
-	margin: 0 2% 0 4%;
+#lineup-options {
+
+	width: 37%;
+	margin-left: 3%;
 	float: left;
 
 	label {
@@ -121,8 +125,44 @@
 		margin-bottom: 2em;
 	}
 
-	select, input {
-		width: 100%;
+	.field-recent-posts {
+		select, input {
+			width: 100%;
+		}
+	}
+
+	.field-lineup-location, .field-lineup-layout {
+		width: 48%;
+		float: left;
+
+		select {
+			width: 100%;
+		}
+	}
+
+	.field-lineup-location {
+		margin-right: 4%;
+	}
+	
+	.field-search-posts {
+
+		.status {
+
+			font-weight: bold;
+			text-align: center;
+			margin-top: 1em;
+			display: none;
+
+			img {
+				margin-right: 0.25em;
+				display: inline-block;
+				vertical-align: bottom;
+			}
+		}
+
+		&.loading .status {
+			display: block;
+		}
 	}
 }
 

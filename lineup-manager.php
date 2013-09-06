@@ -13,12 +13,7 @@ class Lineup_Manager {
 	/**
 	 * Array of possibe locations where a lineup can live
 	 */	
-	var $locations = array();
-
-	/**
-	 * Array of possible layouts for each lineup location
-	 */
-	var $layouts = array();
+	var $data = array();
 
 	/**
 	 * Hooks and filters
@@ -62,20 +57,6 @@ class Lineup_Manager {
 				)
 			)
 		);
-
-		// each lineup belongs to a location
-		/*
-		register_taxonomy( 'location', 'lineup', array(
-			'hierarchical' => false,
-			'public' => true,
-			'labels' => array(
-				'name' => 'Locations',
-				'singular_name' => 'Location'
-
-			)
-		));
-		*/
-
 	}
 
 	/**
@@ -86,6 +67,9 @@ class Lineup_Manager {
 	public function scripts() {
 
 		wp_enqueue_script( 'lineup-manager', plugins_url( 'lineup-manager') . '/js/main.js', array( 'jquery', 'jquery-ui-sortable' ), null, true );
+
+		wp_localize_script( 'lineup-manager', 'lineupManager', array( 'data' => $this->data ) );
+
 		wp_enqueue_style( 'lineup-manager', plugins_url( 'lineup-manager' ) . '/css/screen.css' );
 	}
 
@@ -107,11 +91,7 @@ class Lineup_Manager {
 	 */
 	public function add_meta_boxes() {
 	
-		// remove our tax meta box, it sucks
-		//remove_meta_box( 'tagsdiv-location', 'lineup', 'side' );
-
 		add_meta_box( 'lineup', 'Lineup', array( $this, 'lineup_meta_box' ), 'lineup', 'normal', 'high' );
-		//add_meta_box( 'location', 'Location', array( $this, 'location_meta_box' ), 'lineup', 'side' );
 	}
 
 	/**
@@ -123,19 +103,34 @@ class Lineup_Manager {
 
 		wp_nonce_field( 'lineup_manager', 'lineup_manager_nonce' );
 
+		// get selected location
+		$selected_location = get_post_meta( $post->ID, 'lineup_location', true );
+
+		if( empty( $selected_location ) ) $selected_location = key( $this->data );
+
+		// get selected layout
+		$selected_layout = get_post_meta( $post->ID, 'lineup_layout', true );
+
+		// get the currently selected post ids for this lineup
 		$post_ids = get_post_meta( $post->ID, 'lineup_post_ids', true );
 
-		$posts = get_posts( array(
-			'posts_per_page' => 100,
-			'post__in' => array_map( 'intval', explode( ',', $post_ids ) ),
-			'orderby' => 'post__in'
-		));
+		// if we have ids, get the actual posts
+		if( $post_ids ) {
 
+			$posts = get_posts( array(
+				'posts_per_page' => 100,
+				'post__in' => array_map( 'intval', explode( ',', $post_ids ) ),
+				'orderby' => 'post__in'
+			));
+		}
+
+		// get recent posts for our select
 		$recent_posts = get_posts( array(
 			'posts_per_page' => 20
 		));
 
 		?>
+
 		<div class="lineup">
 
 			<h2>Selected Posts</h2>
@@ -143,27 +138,40 @@ class Lineup_Manager {
 			<input type="hidden" name="lineup_post_ids" id="lineup-post-ids" value="<?php echo esc_attr( $post_ids ); ?>">
 
 			<ol class="selected-posts">
-			<?php 
-
-			if( $posts ) {
-				foreach( $posts as $post ) {
-					echo $this->render_li( $post );
-				}
-			} else {
-				echo '<p class="notice">No posts added.</p>';
-			}
-
-			?>
+				<?php if( !empty( $posts ) ) : ?>
+					<?php foreach( $posts as $post ) echo $this->render_li( $post ); ?>
+				<?php else : ?>
+					<p class="notice">No posts added.</p>
+				<?php endif; ?>
 			</ol>
+
 		</div>
 
-		<div class="lineup-search">
+		<div id="lineup-options">
 
-			<h2>Add Posts</h2>
+			<h2>Settings</h2>
 
-			<fieldset>
+			<fieldset class="field-lineup-location">
+				<label>Location</label>
+				<select name="lineup_location" id="lineup-location-select">
+					<?php foreach( $this->data as $location => $args ) : ?>
+						<option value="<?php echo esc_attr( $location ); ?>" <?php selected( $location, $selected_location ); ?>><?php echo esc_html( $args['name'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</fieldset>
+
+			<fieldset class="field-lineup-layout">
+				<label>Layout</label>
+				<select name="lineup_layout" id="lineup-layout-select">
+					<?php foreach( $this->data[$selected_location]['layouts'] as $layout => $args ) : ?>
+						<option value="<?php echo esc_attr( $layout ); ?>" <?php selected( $selected_layout, $layout ); ?>><?php echo esc_html( $args['name'] ); ?></option>
+					<?php endforeach; ?>
+				</select>
+			</fieldset>
+
+			<fieldset class="field-recent-posts">
 				<label>Add Recent Posts</label>
-				<select>
+				<select id="lineup-recent-post">
 					<option>Choose a Post</option>
 					<?php foreach( $recent_posts as $post ) : ?>
 					<option value="<?php echo intval( $post->ID ); ?>"><?php echo esc_html( $post->post_title ); ?></option>
@@ -171,12 +179,17 @@ class Lineup_Manager {
 				</select>
 			</fieldset>
 
-			<fieldset>
+			<fieldset class="field-search-posts">
 				<label>Search for Posts to Add</label>
 				<input type="text" name="query" id="lineup-search-query" placeholder="Enter a term or phrase"/>
 				<input type="button" class="button" id="lineup-search-submit" value="Search"/>
 				<div class="search-results"></div>
+				<div class="status">
+					<img src="<?php echo esc_url( home_url() . '/wp-includes/images/wpspin.gif' ); ?>"/>
+					Loading &hellip;
+				</div>
 			</fieldset>
+
 		</div>
 
 		<?php
@@ -231,6 +244,15 @@ class Lineup_Manager {
 				die( $html );
 			}
 		}
+	}
+
+	/**
+	 * Get layouts based on a passed location
+	 *
+	 * @return void
+	 */
+	public function get_layouts() {
+
 	}
 
 	/**
@@ -380,20 +402,13 @@ class Lineup_Manager {
 		if( !wp_verify_nonce( $_POST['lineup_manager_nonce'], 'lineup_manager' ) )
 			return;
 
-		// must have a lineup location
-		if( empty( $_POST['lineup_location'] ) )
-			return;
+		$fields = array( 'lineup_location', 'lineup_layout', 'lineup_post_ids' );
 
-		// save the post ids
-		if( !empty( $_POST['lineup_post_ids'] ) ) {
-			update_post_meta( $post_id, 'lineup_post_ids', sanitize_text_field( $_POST['lineup_post_ids'] ) );
-		} else {
-			delete_post_meta( $post_id, 'lineup_post_ids' );
+		foreach( $fields as $field ) {
+			if( !empty( $_POST[$field] ) ) {
+				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[$field] ) );
+			}
 		}
-
-		// already checked for this
-		wp_set_object_terms( $post_id, array( intval( $_POST['lineup_location'] ) ), 'location' );
-		
 	}
 
 	/**
@@ -401,39 +416,26 @@ class Lineup_Manager {
 	 *
 	 * @return void
 	 */
-	public function add_location( $slug, $name ) {
-		$this->locations[$slug]['name'] = $name;
+	public function add_location( $slug, $args ) {
+
+		// parse defaults?
+
+		$this->data[$slug] = $args;
 	}
 
 	/**
 	 *
 	 */
-	public function add_layout( $slug, $name, $locations ) {
+	public function add_layout( $slug, $locations, $args ) {
 		foreach( $locations as $location ) {
-			if( isset( $this->locations[$location] ) ) {
-				$this->locations[$location]['layouts'][$slug] = array(
-					'name' => $name
-				);
+			if( isset( $this->data[$location] ) ) {
+				$this->data[$location]['layouts'][$slug] = $args;
 			}
 		}
 	}
 
 }
-/*
-new Lineup_Manager( array(
-	'home' => array(
-		'name' => 'Home',
-		'layouts' => array(
-			'lead' => array(
-				'name' => 'Lead'
-			),
-			'belt' => array(
-				'name' => 'Belt'
-			)
-		)
-	)
-));
-*/
+
 
 $lm = new Lineup_Manager();
 
@@ -458,3 +460,15 @@ $lm->add_layout( 'belt', array( 'home' ), array(
 	'name' => 'Belt',
 	'limit' => 4
 ));
+
+$lm->add_layout( 'three-up', array( 'tech' ), array(
+	'name' => 'Three Up',
+	'limit' => 3
+));
+
+$lm->add_layout( 'six-up', array( 'tech' ), array(
+	'name' => 'Six Up',
+	'limit' => 6
+));
+
+//die_r( $lm->locations );
