@@ -419,7 +419,9 @@ class Lineup_Manager {
 	}
 
 	/**
+	 * Add a layout to a location or multiple locations
 	 *
+	 * @return void
 	 */
 	public function add_layout( $slug, $locations, $args ) {
 		foreach( $locations as $location ) {
@@ -430,7 +432,9 @@ class Lineup_Manager {
 	}
 
 	/**
+	 * Get the layout for a given location
 	 *
+	 * @return string Layout name
 	 */
 	public static function get_lineup_layout( $location ) {
 
@@ -449,7 +453,7 @@ $lm->add_location( 'home', array(
 
 $lm->add_location( 'tech', array(
 	'name' => 'Technology',
-	'url' => home_url() . '/technology/'
+	'url' => home_url( '/technology/' )
 ));
 
 // slug, locations, args
