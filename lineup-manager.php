@@ -131,7 +131,7 @@ class Lineup_Manager {
 
 		?>
 
-		<div class="lineup">
+		<div id="lineup-order">
 
 			<h2>Selected Posts</h2>
 
@@ -185,7 +185,7 @@ class Lineup_Manager {
 				<input type="button" class="button" id="lineup-search-submit" value="Search"/>
 				<div class="search-results"></div>
 				<div class="status">
-					<img src="<?php echo esc_url( home_url() . '/wp-includes/images/wpspin.gif' ); ?>"/>
+					<img src="<?php echo home_url( '/wp-includes/images/wpspin.gif' ); ?>"/>
 					Loading &hellip;
 				</div>
 			</fieldset>
@@ -345,13 +345,8 @@ class Lineup_Manager {
 			'post_type' => 'lineup',
 			'post_status' => 'publish',
 			'posts_per_page' => 1,
-			'tax_query' => array(
-				array(
-					'tax' => 'location',
-					'field' => 'slug',
-					'terms' => sanitize_text_field( $location )
-				)
-			)
+			'meta_key' => 'lineup_location',
+			'meta_value' => sanitize_text_field( $location )
 		));
 
 		if( $lineup_query->have_posts() ) {
@@ -362,10 +357,13 @@ class Lineup_Manager {
 
 			if( $post_ids ) {
 
+				$post_ids = array_map( 'intval', explode( ',', $post_ids ) );
+
 				// should this be cached?
 				$post_query = new WP_Query( array(
-					'post__in' => array_map( 'intval', explode( ',', $post_ids ) ),
-					'orderby' => 'post__in'
+					'post__in' => $post_ids,
+					'orderby' => 'post__in',
+					'posts_per_page' => count( $post_ids )
 				));
 
 				// got some posts, lets send them back
@@ -417,9 +415,6 @@ class Lineup_Manager {
 	 * @return void
 	 */
 	public function add_location( $slug, $args ) {
-
-		// parse defaults?
-
 		$this->data[$slug] = $args;
 	}
 
@@ -432,6 +427,13 @@ class Lineup_Manager {
 				$this->data[$location]['layouts'][$slug] = $args;
 			}
 		}
+	}
+
+	/**
+	 *
+	 */
+	public static function get_lineup_layout( $location ) {
+
 	}
 
 }
@@ -472,3 +474,13 @@ $lm->add_layout( 'six-up', array( 'tech' ), array(
 ));
 
 //die_r( $lm->locations );
+
+add_action( 'init', function() {
+	
+	//die_r( Lineup_Manager::get_lineup( 'home' ) );
+
+});
+
+
+
+
