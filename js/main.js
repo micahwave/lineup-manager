@@ -4,6 +4,7 @@ lineupManager = lineupManager || {};
 
 	// elements
 	lineupManager.$lineup = $('#lineup');
+	lineupManager.nonce = $('#lineup_manager_nonce').val();
 
 	// initialize
 	lineupManager.init = function() {
@@ -61,7 +62,7 @@ lineupManager = lineupManager || {};
 				{
 					action: 'lineup_manager_get_item',
 					id: id,
-					_ajax_nonce: 'todo'
+					_ajax_nonce: t.nonce
 				},
 				function( response ) {
 
@@ -116,7 +117,7 @@ lineupManager = lineupManager || {};
 			{
 				action: 'lineup_manager_get_posts',
 				query: query,
-				_ajax_nonce: $('#nonce').val()
+				_ajax_nonce: t.nonce
 			},
 			function( response ) {
 				
@@ -131,13 +132,23 @@ lineupManager = lineupManager || {};
 
 	lineupManager.get_layouts = function( location ) {
 
-		var t = this, layouts = t.data[location].layouts, html = '';
+		var t = this, layouts = t.layouts[location], html = '';
 
-		for(var i in layouts) {
-			html += '<option value="' + i + '">' + layouts[i]['name'] + '</option>';
+		if( typeof layouts != "undefined" ) {
+
+			for(var i in layouts) {
+				html += '<option value="' + i + '">' + layouts[i]['name'] + '</option>';
+			}
+
+			$('#lineup-layout-select').html(html).removeAttr('disabled');
+
+		} else {
+
+			$('#lineup-layout-select').html('<option>None available</option>').attr('disabled', 'disabled');
 		}
+		
 
-		$('#lineup-layout-select').html(html);
+		
 
 	}
 
