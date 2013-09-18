@@ -27,7 +27,7 @@ class Lineup_Manager {
 	 */
 	public function __construct() {
 
-		add_action( 'init', array( $this, 'init' ) );
+		add_action( 'init', array( $this, 'init' ), 999 );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( $this, 'save_post' ), 20, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
@@ -398,48 +398,67 @@ class Lineup_Manager {
 		if( empty( $location ) )
 			return false;
 
-		$lineup_query = new WP_Query( array(
-			'post_type' => 'lineup',
-			'post_status' => 'publish',
-			'posts_per_page' => 1,
-			'tax_query' => array(
-				array(
-					'taxonomy' => 'lineup_location',
-					'field' => 'slug',
-					'terms' => sanitize_text_field( $location )
-				)
-			)
-		));
+		$cache_key = $location . '_lineup';
 
-		if( $lineup_query->have_posts() ) {
-			
-			$lineup = array_shift( $lineup_query->posts );
+		// try to get the lineup from the cache
+		$lineup = wp_cache_get( $cache_key, 'lineup_manager_cache' );
 
-			$post_ids = get_post_meta( $lineup->ID, 'lineup_post_ids', true );
+		if( !$lineup ) {
 
-			if( $post_ids ) {
+			$lineups = get_posts( array(
+				'post_type' => 'lineup',
+				'post_status' => 'publish',
+				'posts_per_page' => 1,
+				'tax_query' => array(
+					array(
+						'taxonomy' => 'lineup_location',
+						'field' => 'slug',
+						'terms' => sanitize_text_field( $location )
+					)
+				))
+			);
 
-				$post_ids = array_map( 'intval', explode( ',', $post_ids ) );
+			if( $lineups ) {
 
-				// should this be cached?
-				$post_query = new WP_Query( array(
-					'post__in' => $post_ids,
-					'orderby' => 'post__in',
-					'posts_per_page' => count( $post_ids )
-				));
+				$current_lineup = array_shift( $lineups );
 
-				// got some posts, lets send them back
-				if( $post_query->have_posts() ) {
-					return (object) array(
-						'layout' => get_post_meta( $lineup->ID, 'lineup_layout', true ),
-						'posts' => $post_query->posts
-					);
+				// get the ordered post ids
+				$post_ids = get_post_meta( $current_lineup->ID, 'lineup_post_ids', true );
+
+				if( $post_ids ) {
+
+					// sanitize the ids
+					$post_ids = array_map( 'intval', explode( ',', $post_ids ) );
+
+					// get the posts based on ids
+					$posts = get_posts( array(
+						'post__in' => $post_ids,
+						'orderby' => 'post__in',
+						'posts_per_page' => count( $post_ids )
+					));
+
+					// build our lineup object
+					if( $posts ) {
+
+						$lineup = (object) array(
+							'layout' => get_post_meta( $current_lineup->ID, 'lineup_layout', true ),
+							'posts' => $posts
+						);
+					}
 				}
 			}
 
-		} else {
-			return false;
-		}
+			// save the lineup to the cache
+			// cache long and bust when need lineup added
+			wp_cache_set(
+				$cache_key,
+				$lineup,
+				'lineup_manager_cache',
+				apply_filters( 'lineup_manager_cache_expire', ( 3600 * 6 ) ) // maybe someone wants to cache even harder
+			);
+		} 
+
+		return $lineup;
 	}
 
 
@@ -486,6 +505,8 @@ class Lineup_Manager {
 				delete_post_meta( $post_id, $field );
 			}
 		}
+
+		// bust and prime cache?
 	}
 
 	/**
@@ -509,54 +530,44 @@ class Lineup_Manager {
 	}
 }
 
+/*
+function sample_lineup_init() {
 
-$lm = new Lineup_Manager();
+	global $lineup_manager;
 
-// slug, args
-$lm->add_location( 'home', array(
-	'name' => 'Home',
-	'url' => home_url()
-));
+	$lineup_manager = new Lineup_Manager();
 
-$lm->add_location( 'tech', array(
-	'name' => 'Technology',
-	'url' => home_url( '/technology/' )
-));
+	// slug, args
+	$lineup_manager->add_location( 'home', array(
+		'name' => 'Home',
+		'url' => home_url()
+	));
 
-$lm->add_location( 'right-now', array(
-	'name' => 'Right Now',
-	'url' => home_url()
-));
+	$lineup_manager->add_location( 'tech', array(
+		'name' => 'Technology',
+		'url' => home_url( '/technology/' )
+	));
 
-// slug, locations, args
-$lm->add_layout( 'lead', array( 'home' ), array(
-	'name' => 'Lead',
-	'limit' => 3
-));
+	// slug, locations, args
+	$lineup_manager->add_layout( 'lead', array( 'home' ), array(
+		'name' => 'Lead',
+		'limit' => 3
+	));
 
-$lm->add_layout( 'belt', array( 'home' ), array(
-	'name' => 'Belt',
-	'limit' => 4
-));
+	$lineup_manager->add_layout( 'belt', array( 'home' ), array(
+		'name' => 'Belt',
+		'limit' => 4
+	));
 
-$lm->add_layout( 'three-up', array( 'tech' ), array(
-	'name' => 'Three Up',
-	'limit' => 3
-));
+	$lineup_manager->add_layout( 'three-up', array( 'tech' ), array(
+		'name' => 'Three Up',
+		'limit' => 3
+	));
 
-$lm->add_layout( 'six-up', array( 'tech' ), array(
-	'name' => 'Six Up',
-	'limit' => 6
-));
-
-//die_r( $lm->locations );
-
-add_action( 'init', function() {
-	
-	//die_r( Lineup_Manager::get_lineup( 'home' ) );
-
-});
-
-
-
-
+	$lineup_manager->add_layout( 'six-up', array( 'tech' ), array(
+		'name' => 'Six Up',
+		'limit' => 6
+	));
+}
+add_action( 'init', 'sample_lineup_init' );
+*/
