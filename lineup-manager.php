@@ -484,17 +484,6 @@ class Lineup_Manager {
 		if( !wp_verify_nonce( $_POST['lineup_manager_nonce'], 'lineup_manager' ) )
 			return;
 
-		// save our location term
-		if( !empty( $_POST['lineup_location'] ) ) {
-
-			wp_set_object_terms(
-				$post_id,
-				sanitize_key( $_POST['lineup_location'] ),
-				'lineup_location'
-			);
-
-		}
-
 		// save some custom fields
 		$fields = array( 'lineup_layout', 'lineup_post_ids' );
 
@@ -506,7 +495,24 @@ class Lineup_Manager {
 			}
 		}
 
-		// bust and prime cache?
+		// save our location term
+		if( !empty( $_POST['lineup_location'] ) ) {
+
+			$location = sanitize_key( $_POST['lineup_location'] );
+
+			wp_set_object_terms(
+				$post_id,
+				$location,
+				'lineup_location'
+			);
+
+			// bust cache
+			wp_cache_delete( $location . '_location', 'lineup_manager_cache' );
+
+			// prime cache
+			$lineup = $this->get_lineup( $location );
+
+		}
 	}
 
 	/**
