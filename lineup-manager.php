@@ -32,6 +32,7 @@ class Lineup_Manager {
 		add_action( 'save_post', array( $this, 'save_post' ), 20, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
 		add_action( 'restrict_manage_posts', array( $this, 'manage_posts_filter' ) );
+		add_action( 'publish_lineup', array( $this, 'publish_lineup') );
 		add_action( 'template_redirect', array( $this, 'template_redirect' ) );
 
 		// ajax actions
@@ -315,6 +316,7 @@ class Lineup_Manager {
 	/**
 	 * Helper method to build list items
 	 *
+	 * @param object The post
 	 * @return string HTML markup for li
 	 */
 	public function render_li( $post ) {
@@ -337,6 +339,7 @@ class Lineup_Manager {
 	/**
 	 * Meta box with select box that lets users determine the location for the lineup
 	 *
+	 * @param object The post
 	 * @return void
 	 */
 	public function location_meta_box( $post ) {
@@ -461,6 +464,21 @@ class Lineup_Manager {
 		return $lineup;
 	}
 
+	/**
+	 * Helper to get the location for a given post
+	 *
+	 * @param int Post ID
+	 * @return object The location term
+	 */
+	public function get_lineup_location( $post_id ) {
+
+		$locations = wp_get_object_terms( $post_id, 'lineup_location' );
+
+		if( !is_wp_error( $locations ) ) {
+			return array_shift( $locations );
+		}
+	}
+
 
 	/**
 	 * Save our custom fields and custom taxonomy for lineups
@@ -506,18 +524,49 @@ class Lineup_Manager {
 				'lineup_location'
 			);
 
-			// bust cache
-			wp_cache_delete( $location . '_location', 'lineup_manager_cache' );
-
-			// prime cache
-			$lineup = $this->get_lineup( $location );
-
+			// bust and prime cache if post is published
+			if( $post->post_status === 'publish' ) {
+				$this->bust_cache( $location );
+			}
 		}
+	}
+
+	/**
+	 * Hook to bust cache when a lineup is published
+	 *
+	 * @param int Post ID
+	 * @return void
+	 */
+	public function publish_lineup( $post_id ) {
+
+		$location = $this->get_lineup_location( $post_id );
+
+		if( $location ) {
+			$this->bust_cache( $location->slug );
+		}
+			
+	}
+
+	/**
+	 * Bust and prime the cache for a given location
+	 *
+	 * @param string Location to bust
+	 * @return void
+	 */
+	public function bust_cache( $location ) {
+
+		// bust cache
+		wp_cache_delete( $location . '_location', 'lineup_manager_cache' );
+
+		// prime cache
+		$lineup = $this->get_lineup( $location );
 	}
 
 	/**
 	 * Add a possible lineup location
 	 *
+	 * @param string Slug of location to add
+	 * @param array Options for the location
 	 * @return void
 	 */
 	public function add_location( $slug, $args ) {
@@ -527,6 +576,9 @@ class Lineup_Manager {
 	/**
 	 * Add a layout to a location or multiple locations
 	 *
+	 * @param string Slug of layout to add
+	 * @param array Locations to add the layout to
+	 * @param array Options for the layout
 	 * @return void
 	 */
 	public function add_layout( $slug, $locations, $args ) {
