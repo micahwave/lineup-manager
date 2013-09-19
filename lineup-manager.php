@@ -483,8 +483,8 @@ class Lineup_Manager {
 	/**
 	 * Save our custom fields and custom taxonomy for lineups
 	 *
-	 * @param $post_id init
-	 * @param $post object
+	 * @param int Post ID
+	 * @param object The Post
 	 * @return void
 	 */
 	public function save_post( $post_id, $post ) {
