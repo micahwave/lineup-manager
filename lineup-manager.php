@@ -8,6 +8,8 @@
  * Version: 0.1
  */
 
+if( !class_exists( 'Lineup_Manager' ) ) :
+
 class Lineup_Manager {
 
 	/**
@@ -587,6 +589,8 @@ class Lineup_Manager {
 		}
 	}
 }
+
+endif;
 
 /*
 function sample_lineup_init() {
