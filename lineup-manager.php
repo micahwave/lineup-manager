@@ -101,11 +101,11 @@ class Lineup_Manager {
 	 */
 	public function scripts() {
 
-		wp_enqueue_script( 'lineup-manager', plugins_url( 'lineup-manager') . '/js/main.js', array( 'jquery', 'jquery-ui-sortable' ), null, true );
+		wp_enqueue_script( 'lineup-manager', plugins_url( 'js/main.js', __FILE__ ), array( 'jquery', 'jquery-ui-sortable' ), null, true );
 
 		wp_localize_script( 'lineup-manager', 'lineupManager', array( 'layouts' => $this->layouts ) );
 
-		wp_enqueue_style( 'lineup-manager', plugins_url( 'lineup-manager' ) . '/css/screen.css' );
+		wp_enqueue_style( 'lineup-manager', plugins_url( 'css/screen.css', __FILE__ ) );
 	}
 
 	/**
