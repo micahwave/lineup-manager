@@ -525,12 +525,10 @@ class Lineup_Manager {
 				$location,
 				'lineup_location'
 			);
-
-			// bust and prime cache if post is published
-			if( $post->post_status === 'publish' ) {
-				$this->bust_cache( $location );
-			}
 		}
+
+		// bust the cache
+		$this->bust_cache( $location );
 	}
 
 	/**
@@ -558,7 +556,7 @@ class Lineup_Manager {
 	public function bust_cache( $location ) {
 
 		// bust cache
-		wp_cache_delete( $location . '_location', 'lineup_manager_cache' );
+		wp_cache_delete( $location . '_lineup', 'lineup_manager_cache' );
 
 		// prime cache
 		$lineup = $this->get_lineup( $location );
