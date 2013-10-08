@@ -68,8 +68,8 @@ class Lineup_Manager {
 		// create lineup locations tax
 		register_taxonomy( 'lineup_location', 'lineup', array(
 			'label' => 'Locations',
-			'public' => false,
-			'show_ui' => false,
+			'public' => true,
+			'show_ui' => true,
 			'hierarchical' => false
 		));
 
@@ -89,7 +89,7 @@ class Lineup_Manager {
 			}
 
 			// save this so we dont try to add locations every page load
-			add_option( 'lineup_manager_locations', $hash );
+			update_option( 'lineup_manager_locations', $hash );
 		}
 
 	}
