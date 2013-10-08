@@ -74,9 +74,11 @@ class Lineup_Manager {
 		));
 
 		// add each of our locations as a taxonomy term if the dont already exist
-		$hash = md5( serialize( $this->locations ) );
+		$hash = md5( json_encode( $this->locations ) );
 
 		if( get_option( 'lineup_manager_locations' ) != $hash ) {
+
+			//die('install locations');
 
 			foreach( $this->locations as $slug => $args ) {
 				wp_insert_term(
@@ -91,7 +93,6 @@ class Lineup_Manager {
 			// save this so we dont try to add locations every page load
 			update_option( 'lineup_manager_locations', $hash );
 		}
-
 	}
 
 	/**
