@@ -78,8 +78,6 @@ class Lineup_Manager {
 
 		if( get_option( 'lineup_manager_locations' ) != $hash ) {
 
-			//die('install locations');
-
 			foreach( $this->locations as $slug => $args ) {
 				wp_insert_term(
 					sanitize_text_field( $args['name'] ),
@@ -156,6 +154,11 @@ class Lineup_Manager {
 
 		if( empty( $selected_location ) ) $selected_location = key( $this->locations );
 
+		$location_data = $this->locations[$selected_location];
+
+		// post type(s) for this location
+		$post_type = isset( $location_data['post_type'] ) ? $location_data['post_type'] : 'post';
+
 		// get selected layout
 		$selected_layout = get_post_meta( $post->ID, 'lineup_layout', true );
 
@@ -165,16 +168,20 @@ class Lineup_Manager {
 		// if we have ids, get the actual posts
 		if( $post_ids ) {
 
+			$clean_ids = array_map( 'intval', explode( ',', $post_ids ) );
+
 			$posts = get_posts( array(
-				'posts_per_page' => 100,
-				'post__in' => array_map( 'intval', explode( ',', $post_ids ) ),
-				'orderby' => 'post__in'
+				'posts_per_page' => count( $clean_ids ),
+				'post__in'       => $clean_ids,
+				'orderby'        => 'post__in',
+				'post_type'      => $post_type
 			));
 		}
 
 		// get recent posts for our select
 		$recent_posts = get_posts( array(
-			'posts_per_page' => 20
+			'posts_per_page' => 20,
+			'post_type'      => $post_type
 		));
 
 		?>
@@ -290,11 +297,15 @@ class Lineup_Manager {
 
 		check_ajax_referer( 'lineup_manager' );
 
-		if( isset( $_REQUEST['query'] ) ) {
+		if( isset( $_REQUEST['query'] ) && isset( $_REQUEST['location'] ) ) {
+
+			// figure out the post type for the search
+			$post_type = isset( $this->locations[$_REQUEST['location']]['post_type'] ) ? $this->locations[$_REQUEST['location']]['post_type'] : 'post';
 
 			$args = apply_filters( 'lineup_post_search_args', array(
 				's' => sanitize_text_field( $_REQUEST['query'] ),
-				'posts_per_page' => 10
+				'posts_per_page' => 10,
+				'post_type' => $post_type
 			));
 
 			$posts = get_posts( $args );
@@ -440,6 +451,7 @@ class Lineup_Manager {
 					$posts = get_posts( array(
 						'post__in' => $post_ids,
 						'orderby' => 'post__in',
+						'post_type' => 'any',
 						'posts_per_page' => count( $post_ids )
 					));
 

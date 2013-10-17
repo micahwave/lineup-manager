@@ -117,6 +117,7 @@ lineupManager = lineupManager || {};
 			{
 				action: 'lineup_manager_get_posts',
 				query: query,
+				location: $('#lineup-location-select').val(),
 				_ajax_nonce: t.nonce
 			},
 			function( response ) {
