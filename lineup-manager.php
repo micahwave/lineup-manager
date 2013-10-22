@@ -69,8 +69,8 @@ class Lineup_Manager {
 		// create lineup locations tax
 		register_taxonomy( 'lineup_location', 'lineup', array(
 			'label' => 'Locations',
-			'public' => true,
-			'show_ui' => true,
+			'public' => false,
+			'show_ui' => false,
 			'hierarchical' => false
 		));
 
