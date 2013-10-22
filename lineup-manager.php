@@ -30,6 +30,7 @@ class Lineup_Manager {
 	public function __construct() {
 
 		add_action( 'init', array( $this, 'init' ), 999 );
+		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( $this, 'save_post' ), 20, 2 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts' ) );
@@ -73,7 +74,16 @@ class Lineup_Manager {
 			'hierarchical' => false
 		));
 
-		// add each of our locations as a taxonomy term if the dont already exist
+		
+	}
+
+	/**
+	 * Add each of our locations as a taxonomy term if they dont already exist
+	 *
+	 * @return void
+	 */
+	public function admin_init() {
+
 		$hash = md5( json_encode( $this->locations ) );
 
 		if( get_option( 'lineup_manager_locations' ) != $hash ) {
@@ -83,7 +93,7 @@ class Lineup_Manager {
 					sanitize_text_field( $args['name'] ),
 					'lineup_location',
 					array(
-						'slug' => sanitize_key( $slug )
+						'slug' => sanitize_key( 'lineup-manager-location-' . $slug )
 					)
 				);
 			}
@@ -109,6 +119,8 @@ class Lineup_Manager {
 
 	/**
 	 * Send the user to a specified URL when they click the preview button
+	 *
+	 * @todo Make this work
 	 */
 	public function template_redirect() {
 
@@ -149,12 +161,14 @@ class Lineup_Manager {
 			$location = array_shift( $locations );
 
 			$selected_location = $location->slug;
-
 		}
 
 		if( empty( $selected_location ) ) $selected_location = key( $this->locations );
 
-		$location_data = $this->locations[$selected_location];
+		// get the index for the location data
+		$location_index = str_replace( 'lineup-manager-location-', '', $selected_location );
+
+		$location_data = $this->locations[$location_index];
 
 		// post type(s) for this location
 		$post_type = isset( $location_data['post_type'] ) ? $location_data['post_type'] : 'post';
@@ -215,7 +229,7 @@ class Lineup_Manager {
 					foreach( $this->locations as $slug => $location ) {
 
 						// make sure the slug matches the value used in the term
-						$slug = sanitize_key( $slug );
+						$slug = sanitize_key( 'lineup-manager-location-' . $slug );
 
 						printf(
 							'<option value="%s" %s>%s</option>',
@@ -279,7 +293,7 @@ class Lineup_Manager {
 
 		check_ajax_referer( 'lineup_manager' );
 
-		if( isset( $_REQUEST['id'] ) ) {
+		if( isset( $_REQUEST['id'] ) && current_user_can( 'edit_post', intval( $_REQUEST['id'] ) ) ) {
 
 			 $post = get_post( intval( $_REQUEST['id'] ) );
 
@@ -297,7 +311,7 @@ class Lineup_Manager {
 
 		check_ajax_referer( 'lineup_manager' );
 
-		if( isset( $_REQUEST['query'] ) && isset( $_REQUEST['location'] ) ) {
+		if( isset( $_REQUEST['query'] ) && isset( $_REQUEST['location'] ) && current_user_can( 'edit_posts' ) ) {
 
 			// figure out the post type for the search
 			$post_type = isset( $this->locations[$_REQUEST['location']]['post_type'] ) ? $this->locations[$_REQUEST['location']]['post_type'] : 'post';
@@ -430,7 +444,7 @@ class Lineup_Manager {
 					array(
 						'taxonomy' => 'lineup_location',
 						'field' => 'slug',
-						'terms' => sanitize_text_field( $location )
+						'terms' => sanitize_text_field( 'lineup-manager-location-' . $location )
 					)
 				))
 			);
