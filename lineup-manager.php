@@ -8,9 +8,9 @@
  * Version: 0.1
  */
 
-if( !class_exists( 'Lineup_Manager' ) ) :
+if( !class_exists( 'NS_Lineup_Manager' ) ) :
 
-class Lineup_Manager {
+class NS_Lineup_Manager {
 
 	/**
 	 * The possible locations where a lineup can appear
@@ -29,7 +29,7 @@ class Lineup_Manager {
 	 */
 	public function __construct() {
 
-		add_action( 'init', array( $this, 'init' ), 999 );
+		add_action( 'init', array( $this, 'init' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post', array( $this, 'save_post' ), 20, 2 );
@@ -62,7 +62,8 @@ class Lineup_Manager {
 				'public' => true,
 				'supports' => array(
 					'title'
-				)
+				),
+				'capability_type' => 'lineup'
 			)
 		);
 
@@ -73,8 +74,6 @@ class Lineup_Manager {
 			'show_ui' => false,
 			'hierarchical' => false
 		));
-
-		
 	}
 
 	/**
@@ -614,44 +613,62 @@ class Lineup_Manager {
 		}
 	}
 }
+$GLOBALS['ns_lineup_manager'] = new NS_Lineup_Manager();
 
 endif;
+
+/**
+ * Helper to add a location
+ *
+ * @param string $slug
+ * @param array $args
+ */
+function lm_add_location( $slug, $args ) {
+	$GLOBALS['ns_lineup_manager']->add_location( $slug, $args );
+}
+
+/**
+ * Helper to add a layout
+ *
+ * @param string $slug
+ * @param array $locations
+ * @param array $args
+ */
+function lm_add_layout( $slug, $locations, $args ) {
+	$GLOBALS['ns_lineup_manager']->add_layout( $slug, $location, $args );
+}
 
 /*
 function sample_lineup_init() {
 
-	global $lineup_manager;
-
-	$lineup_manager = new Lineup_Manager();
-
 	// slug, args
-	$lineup_manager->add_location( 'home', array(
+	lm_add_location( 'home', array(
 		'name' => 'Home',
 		'url' => home_url()
 	));
 
-	$lineup_manager->add_location( 'tech', array(
+	lm_add_location( 'tech', array(
 		'name' => 'Technology',
 		'url' => home_url( '/technology/' )
 	));
 
 	// slug, locations, args
-	$lineup_manager->add_layout( 'lead', array( 'home' ), array(
+	lm_add_layout( 'lead', array( 'home' ), array(
 		'name' => 'Lead',
 		'limit' => 3
 	));
 
-	$lineup_manager->add_layout( 'belt', array( 'home' ), array(
+	lm_add_layout( 'belt', array( 'home' ), array(
 		'name' => 'Belt',
 		'limit' => 4
 	));
 
-	$lineup_manager->add_layout( 'three-up', array( 'tech' ), array(
+	lm_add_layout( 'three-up', array( 'tech' ), array(
 		'name' => 'Three Up',
 		'limit' => 3
 	));
 
-	$lineup_manager->add_layout( 'six-up', array( 'tech' ), array(
+	lm_add_layout( 'six-up', array( 'tech' ), array(
 		'name' => 'Six Up',
 		'limit' => 6
 	));
