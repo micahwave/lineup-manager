@@ -615,8 +615,6 @@ class NS_Lineup_Manager {
 }
 $GLOBALS['ns_lineup_manager'] = new NS_Lineup_Manager();
 
-endif;
-
 /**
  * Helper to add a location
  *
@@ -637,6 +635,17 @@ function lm_add_location( $slug, $args ) {
 function lm_add_layout( $slug, $locations, $args ) {
 	$GLOBALS['ns_lineup_manager']->add_layout( $slug, $location, $args );
 }
+
+/**
+ * Helper to get a lineup
+ *
+ * @param string $location
+ */
+function lm_get_lineup( $location ) {
+	$GLOBALS['ns_lineup_manager']->get_lineup( $location );
+}
+
+endif;
 
 /*
 function sample_lineup_init() {
